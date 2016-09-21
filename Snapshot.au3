@@ -1,6 +1,6 @@
-SNAPWEBCAM(@ScriptDir & "\snapshot.bmp")
+SNAPWEBCAM(@ScriptDir & "\Resources\snapshot.bmp")
 Func SNAPWEBCAM($snapfile)
-    Run("viewer.exe","",@SW_HIDE)
+    Run(@ScriptDir & "\Resources\viewer.exe","",@SW_HIDE)
 	Sleep(2000)
     Local Const $WS_CHILD = 0x40000000
     Local Const $WM_CAP_START = 0x400
@@ -18,10 +18,11 @@ Func SNAPWEBCAM($snapfile)
     SNAP($user, $cap[0], $snapfile)
     DllCall($user, "int", "SendMessage", "hWnd", $cap[0], "int", $WM_CAP_UNICODE_START, "int", 0, "int", 0)
     DllCall($user, "int", "SendMessage", "hWnd", $cap[0], "int", $WM_CAP_DRIVER_DISCONNECT, "int", 0, "int", 0)
-    DllClose($avi)
-    DllClose($user)
+    ;DllClose($avi)
+    ;DllClose($user)
 	Sleep(2000)
 	ProcessClose("viewer.exe")
+	Exit
 EndFunc   ;==>SNAPWEBCAM
 Func SNAP($DLL, $cap, $savto)
     Local Const $WM_CAP_START = 0x400

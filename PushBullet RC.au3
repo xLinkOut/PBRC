@@ -9,9 +9,9 @@
 #NoTrayIcon 					;Verificarne effettiva funzionalità
 
 #region GUI Tray Menu
-Opt("TrayMenuMode", 3) 		;Imposta il tipo di menu da creare (3=no default item, no auto check options)
-TraySetIcon("tray_icon.ico") 	;Imposta l'icona
-TraySetClick(8) 			;Imposta come deve essere aperto il menu
+Opt("TrayMenuMode", 3) 			;Imposta il tipo di menu da creare (3=no default item, no auto check options)
+TraySetIcon(@ScriptDir & "\Resources\tray_icon.ico") 	;Imposta l'icona
+TraySetClick(8) 				;Imposta come deve essere aperto il menu
 
 ;ELEMENTI MENU
 $start=TrayCreateItem("Start")					;Pulsante START
@@ -28,7 +28,7 @@ TraySetState() 									;Imposta lo stato dell'icona (vedi documentazione)
 
 #Region GUI Impostazioni Token
 $tokengui = GUICreate("Imposta Token PushBullet", 301, 135, 192, 124)					;Main Window
-GUISetIcon(@ScriptDir & "\tray_icon.ico", -1)									;Icona
+GUISetIcon(@ScriptDir & "\Resources\tray_icon.ico", -1)											;Icona
 $label1 = GUICtrlCreateLabel("Inserisci qui il Token del tuo account:", 16, 8, 275, 23) ;Label
 GUICtrlSetFont(-1, 13, 400, 0, "Arial")
 $boxtoken = GUICtrlCreateInput("", 16, 37, 270, 24)										;Textbox Token
@@ -43,15 +43,10 @@ GUISetState(@SW_HIDE)																	;Imposta lo stato della finestra come 'nas
 #EndRegion GUI
 
 #Region Variabili e impostazioni
-$sessiontoken="" ;Variabile che contiene il token della sessione
-$onoroff="0"	 ;Determina l'avvio e l'arresto del controll remoto
+$sessiontoken="" 			;Variabile che contiene il token della sessione
+$onoroff="0"	 			;Determina l'avvio e l'arresto del controll remoto
 HotKeySet("+!q", "_StopRC")	;Imposta HotKey: SHIFT+ALT+Q per arrestare il servizio (+ = SHIFT / ! = ALT)
 #EndRegion
-
-;$shortcut=(@DesktopDir & "\PushBullet RC.lnk")
-;If not FileExists($shortcut) Then
-;  FileCreateShortcut( @ProgramFilesDir & "\PushBullet Remote Control\PushBullet RC.exe",@DesktopDir & "\PushBullet RC.lnk",@ProgramFilesDir & "\PushBullet Remote Control\icon.ico")
-;EndIf
 
 If not IsAdmin() then
    MsgBox(16,"Attenzione!", "Il programma non può funzionare se non viene eseguito con i diritti di amministratore!")
@@ -60,14 +55,14 @@ EndIf
 
 _LeggiToken() ;All'avvio lo script carica il token precedentemente salvato dal file 'token.ini' e lo imposta nella variabile $sessiontoken
 
-While 1 				 ;CICLO PRINCIPALE
+While 1 ;CICLO PRINCIPALE
    $msg = GUIGetMsg()													;Gli eventi generati dall'interazioni con la GUI vanno a finire nella variabile $msg
    Switch $msg															;Passa a $msg
 	  case $GUI_EVENT_CLOSE												;Evento chiusura finestra
 		 GUISetState(@SW_HIDE,$tokengui) 								;Non termina il programma bensì imposta lo stato della finestra come 'nascosta'
 	  Case $btnToken
 		 $sessiontoken = GUICtrlRead($boxtoken) 						;Legge il token inserito nella textbox
-		 IniWrite ("token.ini", "AccessToken", "token", $sessiontoken)	;Scrive il token nel file 'token.ini'
+		 IniWrite (@ScriptDir & "\Resources\token.ini", "AccessToken", "token", $sessiontoken)	;Scrive il token nel file 'token.ini'
 		 Sleep(500)
 		 MsgBox(64,"Fatto!","Il token è stato salvato con successo")
 		 _LeggiToken()
@@ -113,7 +108,7 @@ Func _LeggiToken() 		 ;CARICA ALL'AVVIO IL TOKEN SALVATO NEL FILE .INI
 	;  MsgBox(16,"Token non impostato","Impostare il token di accesso nell'apposita finestra")
    ;EndIf
    If $sessiontoken="" Then 															;Se la variabile è vuota
-	  $sessiontoken = IniRead("token.ini", "AccessToken", "token", "") ;carica il token dal file
+	  $sessiontoken = IniRead(@ScriptDir & "\Resources\token.ini", "AccessToken", "token", "") ;carica il token dal file
    EndIf
 EndFunc
 
@@ -138,7 +133,7 @@ Func _RemoteControl() 	 ;LEGGE CONTINUAMENTE NUOVI PUSH ED ESEGUE EVENTUALI COMA
 			   $iden[$x] = StringStripWS($iden[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES)
 
 			   ;Local $lista = "Comandi = Invia la lista dei comandi disponibili;"  & @CRLF & "Spegni = Spegne il computer" & @crlf & "Riavvia = Riavvia il computer"  & @CRLF & "Iberna = Iberna il computer;"  & @CRLF & "Screen = Invia uno screenshot dello schermo;" & @CRLF & "Webcam = Invia uno snapshot effettuato dalla webcam;"
-			   _PushFile("listacomandi.png","image/png","PBRC - Lista Comandi")	;Invia il push
+			   _PushFile(@ScriptDir & "\Resources\listacomandi.png","image/png","PBRC - Lista Comandi")	;Invia il push
 			   _EliminaPush($iden[$x])	;Elimina il push per evitare loop infiniti
 			EndIf
 	  EndIf
@@ -218,54 +213,15 @@ Func _RemoteControl() 	 ;LEGGE CONTINUAMENTE NUOVI PUSH ED ESEGUE EVENTUALI COMA
 			   $comando[$x] = StringUpper(StringStripWS($comando[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES))
 			   $iden[$x] = StringStripWS($iden[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES)
 
-			   RunWait("Snapshot.exe")
-			   _PushFile(@AppDataDir & "\snapshot.bmp","image/bmp","PBRC - Webcam Snap")
+			   RunWait(@ScriptDir & "\Resources\Snapshot.exe")
+			   _PushFile(@ScriptDir & "\Resources\snapshot.bmp","image/bmp","PBRC - Webcam Snap")
 			   _EliminaPush($iden[$x])	;Elimina il push per evitare loop infiniti
-			   FileDelete(@AppDataDir & "\snapshot.bmp")
+			   Sleep(1000)
+			   FileDelete(@ScriptDir & "\Resources\snapshot.bmp")
 			EndIf
 	  EndIf
 
-    ;========= COMANDO #7 =========
-	  If StringInStr(StringLower($Result), '"body":" - ') Then
-		 Local $comando = _StringBetween($Result, '"body":"', '"', "", False)
-		 Local $iden = _StringBetween($Result, '"iden":"', '"', "", False)
-		 $x = 0
-			if $iden <> "" and $comando <> "" Then
-			   $comando[$x] = StringUpper(StringStripWS($comando[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES))
-			   $iden[$x] = StringStripWS($iden[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES)
-			   ;_ArrayDisplay($iden) DECOMMENTARE PER VISUALIIZARE GLI IDEN NELL'ARRAY (DEBUGGING)
-			   ;SETTARE QUI LA RISPOSTA E POI IL COMANDO
-			   $sPD = '{"type": "note", "title": "", "body": " - "}'
-			   $oHTTP = ObjCreate("winhttp.winhttprequest.5.1")
-			   $oHTTP.Open("POST", "https://api.pushbullet.com/v2/pushes", False)
-			   $oHTTP.setRequestHeader("Authorization", "Bearer " & $sessiontoken)
-			   $oHTTP.SetRequestHeader("Content-Type", "application/json")
-			   $oHTTP.Send($sPD)
-			   _EliminaPush($iden[$x])	;Elimina il push per evitare loop infiniti
-			EndIf
-	  EndIf
-
-    ;========= COMANDO #8 =========
-	  If StringInStr(StringLower($Result), '"body":" - ') Then
-		 Local $comando = _StringBetween($Result, '"body":"', '"', "", False)
-		 Local $iden = _StringBetween($Result, '"iden":"', '"', "", False)
-		 $x = 0
-			if $iden <> "" and $comando <> "" Then
-			   $comando[$x] = StringUpper(StringStripWS($comando[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES))
-			   $iden[$x] = StringStripWS($iden[$x], $STR_STRIPLEADING + $STR_STRIPTRAILING + $STR_STRIPSPACES)
-			   ;_ArrayDisplay($iden) DECOMMENTARE PER VISUALIIZARE GLI IDEN NELL'ARRAY (DEBUGGING)
-			   ;SETTARE QUI LA RISPOSTA E POI IL COMANDO
-			   $sPD = '{"type": "note", "title": "", "body": " - "}'
-			   $oHTTP = ObjCreate("winhttp.winhttprequest.5.1")
-			   $oHTTP.Open("POST", "https://api.pushbullet.com/v2/pushes", False)
-			   $oHTTP.setRequestHeader("Authorization", "Bearer " & $sessiontoken)
-			   $oHTTP.SetRequestHeader("Content-Type", "application/json")
-			   $oHTTP.Send($sPD)
-			   _EliminaPush($iden[$x])	;Elimina il push per evitare loop infiniti
-			EndIf
-	  EndIf
-
-    ;========= COMANDO #9 =========
+    ;========= COMANDO #7 BLANK=========
 	  If StringInStr(StringLower($Result), '"body":" - ') Then
 		 Local $comando = _StringBetween($Result, '"body":"', '"', "", False)
 		 Local $iden = _StringBetween($Result, '"iden":"', '"', "", False)
@@ -305,7 +261,7 @@ Func _PushFile($File, $FileType, $title) ;INVIA FILE
 	Local $file_url 	  = _StringBetween($risposta, 'file_url":"', '"')
 	local $content_type   = _StringBetween($risposta, 'content-type":"', '"')
 	If IsArray($upload_url) And IsArray($awsaccesskeyid) And IsArray($acl) And IsArray($key) And IsArray($signature) And IsArray($policy) Then
-		 $risposta = RunWait("curl.exe -i -X POST " & $upload_url[0] & ' -F awsaccesskeyid="' & $awsaccesskeyid[0] & '" -F acl="' & $acl[0] & '" -F key="' & $key[0] & '" -F signature="' & $signature[0] & '" -F policy="' & $policy[0] & '" -F content-type="' & $content_type & '" -F file=@"' & $File & '"', "", @SW_HIDE)
+		 $risposta = RunWait(@ScriptDir & "\Resources\curl.exe -i -X POST " & $upload_url[0] & ' -F awsaccesskeyid="' & $awsaccesskeyid[0] & '" -F acl="' & $acl[0] & '" -F key="' & $key[0] & '" -F signature="' & $signature[0] & '" -F policy="' & $policy[0] & '" -F content-type="' & $content_type & '" -F file=@"' & $File & '"', "", @SW_HIDE)
 		 $oHTTP.Open("Post", "https://api.pushbullet.com/v2/pushes", False)
 		 $oHTTP.SetCredentials($sessiontoken, "", 0)
 		 $oHTTP.SetRequestHeader("Content-Type", "application/json")
